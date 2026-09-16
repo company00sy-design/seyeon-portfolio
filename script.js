@@ -1,7 +1,7 @@
 const {createClient}=supabase;
 const db=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 let works=[];
-const CATEGORY_MAP={banner:'BANNER',detail:'DETAIL PAGE',blog:'BLOG',social:'SOCIAL / VIDEO',video:'SOCIAL / VIDEO',ai:'AI VISUAL',web:'WEB'};
+const CATEGORY_MAP={banner:'BANNER',detail:'DETAIL PAGE',blog:'BLOG',social:'SOCIAL / VIDEO',video:'VIDEO',ai:'AI VISUAL',web:'WEB'};
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
@@ -12,18 +12,9 @@ async function loadWorks(){
   const empty=$('#empty-state');
   try{
     const {data,error}=await db.from('works').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:false});
-    if(error){
-      const fallback=await db.from('works').select('*').order('created_at',{ascending:false});
-      if(fallback.error)throw fallback.error;
-      works=(fallback.data||[]).map(normalizeWork);
-    }else works=(data||[]).map(normalizeWork);
+    if(error){const fallback=await db.from('works').select('*').order('created_at',{ascending:false});if(fallback.error)throw fallback.error;works=(fallback.data||[]).map(normalizeWork);}else works=(data||[]).map(normalizeWork);
     renderWorks('BANNER');
-  }catch(error){
-    console.error('Supabase works load error:',error);
-    works=[];
-    const grid=$('#work-grid');if(grid)grid.innerHTML='';
-    if(empty){empty.hidden=false;empty.textContent='작업물을 불러오지 못했습니다. Supabase 설정을 확인해주세요.';}
-  }
+  }catch(error){console.error('Supabase works load error:',error);works=[];const grid=$('#work-grid');if(grid)grid.innerHTML='';if(empty){empty.hidden=false;empty.textContent='작업물을 불러오지 못했습니다. Supabase 설정을 확인해주세요.';}}
 }
 
 function imageCard(w,extra=''){
@@ -50,24 +41,17 @@ function renderWorks(filter='BANNER'){
   const exact=works.filter(w=>categoryLabel(w.category)===filter);
   grid.innerHTML=exact.map(w=>imageCard(w)).join('');
   if(empty)empty.hidden=exact.length>0;
-  if(selected){
-    const featured=works.filter(w=>w.featured);
-    selected.innerHTML=featured.length?featured.map(w=>imageCard(w,'selected-card')).join(''):'';
-  }
+  if(selected){const featured=works.filter(w=>w.featured);selected.innerHTML=featured.length?featured.map(w=>imageCard(w,'selected-card')).join(''):'';}
   bindWorkCards();
 }
 
-function instagramEmbed(url){if(!url)return '';let u=url.trim().replace(/\/$/,'');if(!u.includes('/embed'))u+='/embed/';return u;}
+function instagramEmbed(url){if(!url)return '';let u=url.trim().replace(/\/$/,'');return u.includes('/embed')?u:`${u}/embed/`;}
+function blogEmbed(url){if(!url)return '';return url.trim();}
 function ensureModal(){
-  let modal=$('#portfolio-modal');
-  if(modal)return modal;
-  modal=document.createElement('div');
-  modal.id='portfolio-modal';modal.className='project-modal';
+  let modal=$('#portfolio-modal');if(modal)return modal;
+  modal=document.createElement('div');modal.id='portfolio-modal';modal.className='project-modal';
   modal.innerHTML='<button class="project-modal-close" aria-label="닫기">×</button><div class="project-modal-content"><div class="project-modal-body"></div></div>';
-  document.body.appendChild(modal);
-  modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-  modal.querySelector('.project-modal-close').addEventListener('click',closeModal);
-  return modal;
+  document.body.appendChild(modal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});modal.querySelector('.project-modal-close').addEventListener('click',closeModal);return modal;
 }
 function openModal(html){const modal=ensureModal();modal.querySelector('.project-modal-body').innerHTML=html;modal.classList.add('open');document.body.style.overflow='hidden';}
 function closeModal(){const m=$('#portfolio-modal');if(m){m.classList.remove('open');m.querySelector('.project-modal-body').innerHTML='';}document.body.style.overflow='';}
@@ -76,31 +60,26 @@ function openWork(w){
   const c=w.category;
   if(c==='banner'||c==='ai'){
     const imgs=c==='ai'&&w.detail_images.length?w.detail_images:[w.image].filter(Boolean);
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>${esc(categoryLabel(c))}</span></div>${imgs.length?imgs.map(src=>`<img class="project-image" src="${esc(src)}" alt="${esc(w.title)}">`).join(''):'<div class="project-empty">등록된 이미지가 없습니다.</div>'}${w.description?`<p>${esc(w.description)}</p>`:''}</div>`);
-    return;
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>${esc(categoryLabel(c))}</span></div>${imgs.length?imgs.map(src=>`<img class="project-image" src="${esc(src)}" alt="${esc(w.title)}">`).join(''):'<div class="project-empty">등록된 이미지가 없습니다.</div>'}${w.description?`<p>${esc(w.description)}</p>`:''}</div>`);return;
   }
   if(c==='detail'){
     const imgs=w.detail_images.length?w.detail_images:[w.image].filter(Boolean);
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>DETAIL PAGE · ${imgs.length} IMAGES</span></div><div class="detail-viewer"><div class="detail-viewer-stack">${imgs.map(src=>`<img src="${esc(src)}" alt="${esc(w.title)}">`).join('')}</div></div></div>`);
-    return;
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>DETAIL PAGE · ${imgs.length} IMAGES</span></div><div class="detail-viewer"><div class="detail-viewer-stack">${imgs.length?imgs.map(src=>`<img src="${esc(src)}" alt="${esc(w.title)}" loading="lazy">`).join(''):'<div class="project-empty">등록된 상세페이지 이미지가 없습니다.</div>'}</div></div></div>`);return;
   }
   if(c==='social'){
     const url=w.meta?.social_url||'';
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>SOCIAL / REELS</span></div><div class="detail-viewer"><div class="detail-viewer-stack"><div class="video-preview" style="max-height:78vh">${w.image?`<img src="${esc(w.image)}" alt="${esc(w.title)}">`:''}<div class="video-overlay"><span class="play-icon">▶</span></div></div></div></div>${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">Instagram / SNS에서 보기 ↗</a>`:''}</div>`);
-    return;
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>SOCIAL / REELS</span></div>${url?`<div class="embed-wrap embed-instagram"><iframe src="${esc(instagramEmbed(url))}" title="${esc(w.title)} Instagram" loading="lazy" allowtransparency="true" frameborder="0" scrolling="no"></iframe></div>`:''}${w.image?`<div class="embed-fallback-media"><img src="${esc(w.image)}" alt="${esc(w.title)}"></div>`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">Instagram / SNS에서 보기 ↗</a>`:''}</div>`);return;
   }
   if(c==='video'){
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>VIDEO</span></div>${w.image?`<video class="project-video" src="${esc(w.image)}" controls playsinline></video>`:'<div class="project-empty">등록된 영상이 없습니다.</div>'}${w.description?`<p>${esc(w.description)}</p>`:''}</div>`);
-    return;
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>VIDEO</span></div>${w.image?`<video class="project-video" src="${esc(w.image)}" controls playsinline></video>`:'<div class="project-empty">등록된 영상이 없습니다.</div>'}${w.description?`<p>${esc(w.description)}</p>`:''}</div>`);return;
   }
   if(c==='blog'){
     const url=w.meta?.blog_url||'';
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>BLOG</span></div><p>${esc(w.description||'')}</p>${w.image?`<img src="${esc(w.image)}" alt="${esc(w.title)}">`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">블로그 원문 보기 ↗</a>`:''}</div>`);
-    return;
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>BLOG</span></div>${url?`<div class="embed-wrap embed-blog"><iframe src="${esc(blogEmbed(url))}" title="${esc(w.title)} Blog" loading="lazy" frameborder="0"></iframe></div>`:''}<p>${esc(w.description||'')}</p>${w.image?`<img src="${esc(w.image)}" alt="${esc(w.title)}">`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">블로그 원문 보기 ↗</a>`:''}</div>`);return;
   }
   if(c==='web'){
     const url=w.meta?.web_url||'';
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>WEB</span></div>${w.image?`<div class="web-viewer"><img src="${esc(w.image)}" alt="${esc(w.title)}"></div>`:''}${w.description?`<p>${esc(w.description)}</p>`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">사이트 보기 ↗</a>`:''}</div>`);
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>WEB</span></div>${url?`<div class="embed-wrap embed-web"><iframe src="${esc(url)}" title="${esc(w.title)} website" loading="lazy"></iframe></div>`:''}${w.image?`<div class="web-viewer"><img src="${esc(w.image)}" alt="${esc(w.title)}"></div>`:''}${w.description?`<p>${esc(w.description)}</p>`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">사이트 보기 ↗</a>`:''}</div>`);
   }
 }
 
