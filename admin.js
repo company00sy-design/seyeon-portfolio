@@ -139,12 +139,14 @@ workForm.addEventListener('submit', async (e) => {
     for (const file of detailFiles) uploadedDetails.push(await uploadFile(file, `works/${id}/details`));
     const detailImages = [...existingDetails, ...uploadedDetails];
 
+    // The existing `works` table uses `image` for the representative image.
+    // Do not send `image_url`, because that column does not exist in the current schema.
     const payload = {
       id,
       category: $('#category').value,
       title: $('#title').value.trim(),
       year: $('#year').value.trim(),
-      image_url: imageUrl,
+      image: imageUrl,
       featured: $('#featured').checked,
       sort_order: Number($('#sort-order').value) || 0,
       detail_images: detailImages
@@ -155,6 +157,8 @@ workForm.addEventListener('submit', async (e) => {
     if (isEdit) result = await sb.from('works').update(payload).eq('id', id);
     else result = await sb.from('works').insert(payload);
 
+    // detail_images is optional. If it has not been added to the DB yet,
+    // save the rest of the work so representative-image registration still works.
     if (result.error && /detail_images|column/i.test(result.error.message || '')) {
       delete payload.detail_images;
       result = isEdit ? await sb.from('works').update(payload).eq('id', id) : await sb.from('works').insert(payload);
@@ -186,23 +190,25 @@ async function loadWorks() {
 }
 
 function renderRow(work) {
+  const image = work.image_url || work.image || '';
   const row = document.createElement('div');
   row.className = 'work-row';
-  row.innerHTML = `<img src="${escapeAttr(work.image_url || work.image || '')}" alt=""><div><b>${escapeHtml(work.title || '제목 없음')}</b><span>${escapeHtml(work.category || '')} · ${escapeHtml(work.year || '')}${work.featured ? ' · SELECTED' : ''}</span></div><div class="row-actions"><button type="button" data-edit>수정</button><button type="button" data-delete>삭제</button></div>`;
+  row.innerHTML = `<img src="${escapeAttr(image)}" alt=""><div><b>${escapeHtml(work.title || '제목 없음')}</b><span>${escapeHtml(work.category || '')} · ${escapeHtml(work.year || '')}${work.featured ? ' · SELECTED' : ''}</span></div><div class="row-actions"><button type="button" data-edit>수정</button><button type="button" data-delete>삭제</button></div>`;
   row.querySelector('[data-edit]').onclick = () => editWork(work);
   row.querySelector('[data-delete]').onclick = () => deleteWork(work);
   workList.appendChild(row);
 }
 
 function editWork(work) {
+  const image = work.image_url || work.image || '';
   $('#work-id').value = work.id;
   $('#title').value = work.title || '';
   $('#category').value = work.category || 'BANNER';
   $('#year').value = work.year || '';
   $('#sort-order').value = work.sort_order || 0;
   $('#featured').checked = !!work.featured;
-  $('#image-url').value = work.image_url || work.image || '';
-  $('#cover-preview').innerHTML = (work.image_url || work.image) ? `<img src="${escapeAttr(work.image_url || work.image)}" alt="대표 이미지">` : '<span>대표 이미지를 업로드하세요.</span>';
+  $('#image-url').value = image;
+  $('#cover-preview').innerHTML = image ? `<img src="${escapeAttr(image)}" alt="대표 이미지">` : '<span>대표 이미지를 업로드하세요.</span>';
   existingDetails = Array.isArray(work.detail_images) ? [...work.detail_images] : [];
   detailFiles = [];
   renderDetailPreview();
