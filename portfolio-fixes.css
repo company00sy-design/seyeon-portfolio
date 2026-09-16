@@ -1,0 +1,17 @@
+/* Portfolio UI fixes */
+.work-card[data-category="banner"] .work-media{aspect-ratio:4/5}
+.work-card[data-category="detail"] .detail-preview{aspect-ratio:4/5}
+.work-card[data-category="social"] .video-preview{aspect-ratio:9/16;max-height:560px}
+.detail-viewer{display:block;max-height:78vh;overflow-y:auto;overflow-x:hidden;background:#e8e6df}
+.detail-viewer-stack{width:100%;max-height:none;display:block}
+.detail-viewer-stack img{width:min(720px,100%);height:auto;display:block;margin:0 auto}
+.embed-wrap{width:100%;overflow:hidden;background:#fff;border:1px solid #d8d6cf}
+.embed-wrap iframe{display:block;width:100%;border:0;background:#fff}
+.embed-instagram{max-width:540px;min-height:680px;margin:0 auto}
+.embed-instagram iframe{height:760px}
+.embed-blog{min-height:720px}
+.embed-blog iframe{height:78vh;min-height:650px}
+.embed-web{min-height:70vh}
+.embed-web iframe{height:70vh;min-height:560px}
+.embed-fallback-media{display:none}
+@media(max-width:800px){.embed-instagram{min-height:620px}.embed-instagram iframe{height:700px}.embed-blog iframe{height:75vh;min-height:560px}.embed-web iframe{height:70vh;min-height:500px}}
