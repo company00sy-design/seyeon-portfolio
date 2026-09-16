@@ -4,7 +4,7 @@ let works=[];
 const CATEGORY_MAP={banner:'BANNER',detail:'DETAIL PAGE',blog:'BLOG',social:'SOCIAL / VIDEO',video:'VIDEO',ai:'AI VISUAL',web:'WEB'};
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function esc(v){return String(v??'').replace(/[&<>\"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[m]));}
 function categoryLabel(c){return CATEGORY_MAP[c]||String(c||'').toUpperCase();}
 function parseImages(value){
   if(Array.isArray(value))return value.filter(Boolean);
@@ -33,7 +33,7 @@ function imageCard(w,extra=''){
   if(c==='social'||c==='video'){
     const src=w.image;
     const label=c==='social'?'REELS / SNS':'VIDEO';
-    return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="${esc(c)}"><div class="video-preview">${src?`<video src="${esc(src)}" muted loop playsinline preload="metadata"></video>`:'<div class="media-placeholder">VIDEO</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>${label}</small></div></div><div class="work-meta"><span>${categoryLabel(c)}</span><h3>${esc(w.title)}</h3></div></article>`;
+    return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="${esc(c)}"><div class="video-preview">${src?`<video src="${esc(src)}" muted loop playsinline autoplay preload="auto" crossorigin="anonymous"></video>`:'<div class="media-placeholder">VIDEO</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>${label}</small></div></div><div class="work-meta"><span>${categoryLabel(c)}</span><h3>${esc(w.title)}</h3></div></article>`;
   }
   if(c==='blog'){
     return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="blog"><div class="project-card"><div class="project-card-top"><span>BLOG</span><span>↗</span></div><div class="project-card-main"><h3>${esc(w.title)}</h3><p>${esc(w.description||'프로젝트 소개 보기')}</p></div><span class="project-card-arrow">↗</span></div><div class="work-meta"><span>BLOG</span><h3>${esc(w.title)}</h3></div></article>`;
@@ -51,6 +51,34 @@ function renderWorks(filter='BANNER'){
   if(empty)empty.hidden=exact.length>0;
   if(selected){const featured=works.filter(w=>w.featured);selected.innerHTML=featured.length?featured.map(w=>imageCard(w,'selected-card')).join(''):'';}
   bindWorkCards();
+  prepareVideoPreviews(grid);
+}
+
+function prepareVideoPreviews(root=document){
+  root.querySelectorAll('.work-card[data-category="social"] .video-preview video').forEach(video=>{
+    video.muted=true;
+    video.playsInline=true;
+    video.autoplay=true;
+    video.preload='auto';
+    const showFirstFrame=()=>{
+      if(video.poster)return;
+      try{
+        const canvas=document.createElement('canvas');
+        canvas.width=video.videoWidth||360;
+        canvas.height=video.videoHeight||640;
+        const ctx=canvas.getContext('2d');
+        if(!ctx)return;
+        ctx.drawImage(video,0,0,canvas.width,canvas.height);
+        video.poster=canvas.toDataURL('image/jpeg',0.82);
+      }catch(error){
+        // If the storage response does not allow canvas access, autoplay still provides the preview.
+      }
+    };
+    video.addEventListener('loadeddata',showFirstFrame,{once:true});
+    video.addEventListener('canplay',()=>video.play().catch(()=>{}),{once:true});
+    if(video.readyState>=2)showFirstFrame();
+    video.play().catch(()=>{});
+  });
 }
 
 function instagramEmbed(url){if(!url)return '';let u=url.trim().replace(/\/$/,'');return u.includes('/embed')?u:`${u}/embed/`;}
