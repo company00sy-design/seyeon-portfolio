@@ -32,7 +32,8 @@ function imageCard(w,extra=''){
   }
   if(c==='social'||c==='video'){
     const src=w.image;
-    return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="${esc(c)}"><div class="video-preview">${src?`<img src="${esc(src)}" alt="${esc(w.title)}" loading="lazy">`:'<div class="media-placeholder">REELS THUMBNAIL</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>${c==='social'?'REELS / SNS':'VIDEO'}</small></div></div><div class="work-meta"><span>${categoryLabel(c)}</span><h3>${esc(w.title)}</h3></div></article>`;
+    const label=c==='social'?'REELS / SNS':'VIDEO';
+    return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="${esc(c)}"><div class="video-preview">${src?`<video src="${esc(src)}" muted loop playsinline preload="metadata"></video>`:'<div class="media-placeholder">VIDEO</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>${label}</small></div></div><div class="work-meta"><span>${categoryLabel(c)}</span><h3>${esc(w.title)}</h3></div></article>`;
   }
   if(c==='blog'){
     return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="blog"><div class="project-card"><div class="project-card-top"><span>BLOG</span><span>↗</span></div><div class="project-card-main"><h3>${esc(w.title)}</h3><p>${esc(w.description||'프로젝트 소개 보기')}</p></div><span class="project-card-arrow">↗</span></div><div class="work-meta"><span>BLOG</span><h3>${esc(w.title)}</h3></div></article>`;
@@ -75,7 +76,7 @@ function openWork(w){
   }
   if(c==='social'){
     const url=w.meta?.social_url||'';
-    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>SOCIAL / REELS</span></div>${url?`<div class="embed-wrap embed-instagram"><iframe src="${esc(instagramEmbed(url))}" title="${esc(w.title)} Instagram" loading="eager" allowtransparency="true" frameborder="0" scrolling="no"></iframe></div>`:''}${w.image?`<div class="embed-fallback-media"><img src="${esc(w.image)}" alt="${esc(w.title)}"></div>`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">Instagram / SNS에서 보기 ↗</a>`:''}</div>`);return;
+    openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>SOCIAL / REELS</span></div>${w.image?`<video class="project-video" src="${esc(w.image)}" controls playsinline></video>`:''}${url?`<a class="project-external-link" href="${esc(url)}" target="_blank" rel="noopener">Instagram / SNS에서 보기 ↗</a>`:''}</div>`);return;
   }
   if(c==='video'){
     openModal(`<div class="blog-project"><div class="project-modal-head"><strong>${esc(w.title)}</strong><span>VIDEO</span></div>${w.image?`<video class="project-video" src="${esc(w.image)}" controls playsinline></video>`:'<div class="project-empty">등록된 영상이 없습니다.</div>'}${w.description?`<p>${esc(w.description)}</p>`:''}</div>`);return;
@@ -90,7 +91,11 @@ function openWork(w){
   }
 }
 
-function bindWorkCards(){$$('.work-card').forEach(card=>card.addEventListener('click',()=>{const w=works.find(x=>String(x.id)===String(card.dataset.id));if(w)openWork(w);}));}
+function bindWorkCards(){
+  $$('.work-card').forEach(card=>{
+    card.addEventListener('click',()=>{const w=works.find(x=>String(x.id)===String(card.dataset.id));if(w)openWork(w);});
+  });
+}
 $$('.filter').forEach(btn=>btn.addEventListener('click',()=>{$$('.filter').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderWorks(btn.dataset.filter);}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 loadWorks();
