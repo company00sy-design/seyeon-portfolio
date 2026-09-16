@@ -1,240 +1,26 @@
-const { createClient } = window.supabase;
-const sb = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-const BUCKET = 'portfolio';
-
-const $ = (s) => document.querySelector(s);
-const loginView = $('#login-view');
-const adminView = $('#admin-view');
-const loginForm = $('#login-form');
-const loginError = $('#login-error');
-const workForm = $('#work-form');
-const workList = $('#work-list');
-const listEmpty = $('#list-empty');
-const workCount = $('#work-count');
-
-let currentUser = null;
-let coverFile = null;
-let detailFiles = [];
-let existingDetails = [];
-
-function message(el, text, isError = false) {
-  el.textContent = text;
-  el.hidden = !text;
-  el.classList.toggle('error', isError);
-}
-
-async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  currentUser = session?.user || null;
-  showView();
-  if (currentUser) loadWorks();
-}
-
-function showView() {
-  loginView.hidden = !!currentUser;
-  adminView.hidden = !currentUser;
-}
-
-loginForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  message(loginError, '');
-  const { data, error } = await sb.auth.signInWithPassword({
-    email: $('#email').value.trim(),
-    password: $('#password').value
-  });
-  if (error) return message(loginError, error.message || '로그인에 실패했습니다.', true);
-  currentUser = data.user;
-  showView();
-  loadWorks();
-});
-
-$('#logout-btn').addEventListener('click', async () => {
-  await sb.auth.signOut();
-  currentUser = null;
-  showView();
-});
-
-sb.auth.onAuthStateChange((_event, session) => {
-  currentUser = session?.user || null;
-  showView();
-  if (currentUser) loadWorks();
-});
-
-function resetForm() {
-  workForm.reset();
-  $('#work-id').value = '';
-  $('#category').value = 'banner';
-  $('#sort-order').value = 0;
-  $('#form-title').textContent = '작업 추가';
-  $('#cancel-edit').hidden = true;
-  $('#cover-preview').innerHTML = '<span>대표 이미지를 업로드하세요.</span>';
-  $('#detail-preview').innerHTML = '';
-  $('#image-url').value = '';
-  coverFile = null;
-  detailFiles = [];
-  existingDetails = [];
-  message($('#form-message'), '');
-}
-
-$('.upload-btn[data-target="cover-input"]').addEventListener('click', () => $('#cover-input').click());
-$('.upload-btn[data-target="detail-input"]').addEventListener('click', () => $('#detail-input').click());
-
-$('#cover-input').addEventListener('change', () => {
-  coverFile = $('#cover-input').files[0] || null;
-  if (!coverFile) return;
-  const url = URL.createObjectURL(coverFile);
-  $('#cover-preview').innerHTML = `<img src="${url}" alt="대표 이미지 미리보기">`;
-});
-
-$('#detail-input').addEventListener('change', () => {
-  detailFiles = [...$('#detail-input').files];
-  renderDetailPreview();
-});
-
-function renderDetailPreview() {
-  const wrap = $('#detail-preview');
-  wrap.innerHTML = '';
-  existingDetails.forEach((url, index) => {
-    const el = document.createElement('div');
-    el.className = 'detail-thumb';
-    el.innerHTML = `<img src="${url}" alt="상세 이미지"><button type="button" data-existing="${index}">×</button>`;
-    el.querySelector('button').onclick = () => {
-      existingDetails.splice(index, 1);
-      renderDetailPreview();
-    };
-    wrap.appendChild(el);
-  });
-  detailFiles.forEach((file, index) => {
-    const el = document.createElement('div');
-    el.className = 'detail-thumb';
-    el.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="새 상세 이미지"><button type="button">×</button>`;
-    el.querySelector('button').onclick = () => {
-      detailFiles.splice(index, 1);
-      renderDetailPreview();
-    };
-    wrap.appendChild(el);
-  });
-}
-
-async function uploadFile(file, folder) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const safeName = `${crypto.randomUUID()}.${ext}`;
-  const path = `${folder}/${safeName}`;
-  const { error } = await sb.storage.from(BUCKET).upload(path, file, { upsert: false, cacheControl: '31536000' });
-  if (error) throw error;
-  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-}
-
-workForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const msg = $('#form-message');
-  message(msg, '저장 중…');
-
-  try {
-    const id = $('#work-id').value || crypto.randomUUID();
-    let imageUrl = $('#image-url').value.trim();
-    if (coverFile) imageUrl = await uploadFile(coverFile, `works/${id}/cover`);
-    if (!imageUrl) throw new Error('대표 이미지를 선택하거나 이미지 URL을 입력해주세요.');
-
-    const uploadedDetails = [];
-    for (const file of detailFiles) uploadedDetails.push(await uploadFile(file, `works/${id}/details`));
-    const detailImages = [...existingDetails, ...uploadedDetails];
-
-    // Category values must match the Supabase CHECK constraint exactly.
-    const allowedCategories = ['banner', 'detail', 'blog', 'social', 'video', 'ai', 'web'];
-    const category = $('#category').value;
-    if (!allowedCategories.includes(category)) {
-      throw new Error('카테고리 값이 올바르지 않습니다.');
-    }
-
-    // The existing `works` table uses `image` for the representative image.
-    // Do not send `image_url`, because that column does not exist in the current schema.
-    const payload = {
-      id,
-      category,
-      title: $('#title').value.trim(),
-      year: $('#year').value.trim(),
-      image: imageUrl,
-      featured: $('#featured').checked,
-      sort_order: Number($('#sort-order').value) || 0,
-      detail_images: detailImages
-    };
-
-    const isEdit = !!$('#work-id').value;
-    let result;
-    if (isEdit) result = await sb.from('works').update(payload).eq('id', id);
-    else result = await sb.from('works').insert(payload);
-
-    // detail_images is optional. If it has not been added to the DB yet,
-    // save the rest of the work so representative-image registration still works.
-    if (result.error && /detail_images|column/i.test(result.error.message || '')) {
-      delete payload.detail_images;
-      result = isEdit ? await sb.from('works').update(payload).eq('id', id) : await sb.from('works').insert(payload);
-    }
-    if (result.error) throw result.error;
-
-    message(msg, '저장했습니다.');
-    resetForm();
-    await loadWorks();
-  } catch (err) {
-    console.error(err);
-    message(msg, err.message || '저장 중 오류가 발생했습니다.', true);
-  }
-});
-
-$('#cancel-edit').addEventListener('click', resetForm);
-
-async function loadWorks() {
-  const { data, error } = await sb.from('works').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
-  if (error) {
-    workList.innerHTML = `<div class="empty">작업을 불러오지 못했습니다.<br>${escapeHtml(error.message)}</div>`;
-    return;
-  }
-  const works = data || [];
-  workCount.textContent = works.length;
-  listEmpty.hidden = works.length !== 0;
-  workList.innerHTML = '';
-  works.forEach(renderRow);
-}
-
-function renderRow(work) {
-  const image = work.image_url || work.image || '';
-  const row = document.createElement('div');
-  row.className = 'work-row';
-  row.innerHTML = `<img src="${escapeAttr(image)}" alt=""><div><b>${escapeHtml(work.title || '제목 없음')}</b><span>${escapeHtml(work.category || '')} · ${escapeHtml(work.year || '')}${work.featured ? ' · SELECTED' : ''}</span></div><div class="row-actions"><button type="button" data-edit>수정</button><button type="button" data-delete>삭제</button></div>`;
-  row.querySelector('[data-edit]').onclick = () => editWork(work);
-  row.querySelector('[data-delete]').onclick = () => deleteWork(work);
-  workList.appendChild(row);
-}
-
-function editWork(work) {
-  const image = work.image_url || work.image || '';
-  $('#work-id').value = work.id;
-  $('#title').value = work.title || '';
-  $('#category').value = work.category || 'banner';
-  $('#year').value = work.year || '';
-  $('#sort-order').value = work.sort_order || 0;
-  $('#featured').checked = !!work.featured;
-  $('#image-url').value = image;
-  $('#cover-preview').innerHTML = image ? `<img src="${escapeAttr(image)}" alt="대표 이미지">` : '<span>대표 이미지를 업로드하세요.</span>';
-  existingDetails = Array.isArray(work.detail_images) ? [...work.detail_images] : [];
-  detailFiles = [];
-  renderDetailPreview();
-  $('#form-title').textContent = '작업 수정';
-  $('#cancel-edit').hidden = false;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-async function deleteWork(work) {
-  if (!confirm(`“${work.title || '이 작업'}”을 삭제할까요?`)) return;
-  const { error } = await sb.from('works').delete().eq('id', work.id);
-  if (error) return alert(error.message);
-  if ($('#work-id').value === work.id) resetForm();
-  loadWorks();
-}
-
-function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-function escapeAttr(value) { return escapeHtml(value); }
-
-resetForm();
-init();
+const {createClient}=window.supabase;const sb=createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.anonKey);const BUCKET='portfolio';const $=s=>document.querySelector(s);let currentUser=null,coverFile=null,detailFiles=[],aiFiles=[];
+const fieldIds=['fields-banner','fields-detail','fields-blog','fields-social','fields-video','fields-ai','fields-web'];
+function msg(el,text,error=false){el.textContent=text;el.hidden=!text;el.classList.toggle('error',error)}
+function showView(){ $('#login-view').hidden=!!currentUser;$('#admin-view').hidden=!currentUser }
+function showCategoryFields(){const c=$('#category').value;fieldIds.forEach(id=>$('#'+id).hidden=id!==`fields-${c}`);}
+async function init(){const {data:{session}}=await sb.auth.getSession();currentUser=session?.user||null;showView();showCategoryFields();if(currentUser)loadWorks()}
+$('#login-form').addEventListener('submit',async e=>{e.preventDefault();msg($('#login-error'),'');const {data,error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#password').value});if(error)return msg($('#login-error'),error.message,true);currentUser=data.user;showView();loadWorks()});
+$('#logout-btn').addEventListener('click',async()=>{await sb.auth.signOut();currentUser=null;showView()});sb.auth.onAuthStateChange((_e,s)=>{currentUser=s?.user||null;showView();if(currentUser)loadWorks()});$('#category').addEventListener('change',showCategoryFields);
+function resetForm(){ $('#work-form').reset();$('#work-id').value='';$('#category').value='banner';$('#sort-order').value=0;$('#form-title').textContent='작업 추가';$('#cancel-edit').hidden=true;fieldIds.forEach(id=>$('#'+id).hidden=id!=='fields-banner');$('#cover-preview').innerHTML='<span>이미지를 업로드하세요.</span>';$('#detail-preview').innerHTML='';$('#detail-cover-preview').innerHTML='<span>썸네일 선택</span>';$('#blog-cover-preview').innerHTML='<span>블로그 대표 이미지</span>';$('#social-cover-preview').innerHTML='<span>썸네일 선택</span>';$('#web-cover-preview').innerHTML='<span>웹 대표 이미지</span>';$('#video-preview').innerHTML='<span>동영상 파일을 선택하세요.</span>';$('#video-only-preview').innerHTML='<span>동영상 파일을 선택하세요.</span>';$('#ai-preview').innerHTML='';coverFile=null;detailFiles=[];aiFiles=[];msg($('#form-message'),'')}
+function bindFileButton(target){document.querySelector(`[data-target="${target}"]`).addEventListener('click',()=>$('#'+target).click())}
+['cover-input','detail-input','detail-cover-input','blog-cover-input','video-input','social-cover-input','video-only-input','ai-input','web-cover-input'].forEach(bindFileButton);
+function previewImage(file,selector){if(!file)return;const u=URL.createObjectURL(file);$(selector).innerHTML=`<img src="${u}" alt="미리보기">`}
+$('#cover-input').addEventListener('change',()=>{coverFile=$('#cover-input').files[0]||null;previewImage(coverFile,'#cover-preview')});
+$('#detail-cover-input').addEventListener('change',()=>previewImage($('#detail-cover-input').files[0],'#detail-cover-preview'));$('#blog-cover-input').addEventListener('change',()=>previewImage($('#blog-cover-input').files[0],'#blog-cover-preview'));$('#social-cover-input').addEventListener('change',()=>previewImage($('#social-cover-input').files[0],'#social-cover-preview'));$('#web-cover-input').addEventListener('change',()=>previewImage($('#web-cover-input').files[0],'#web-cover-preview'));
+$('#detail-input').addEventListener('change',()=>{detailFiles=[...$('#detail-input').files];renderThumbs(detailFiles,'#detail-preview')});$('#ai-input').addEventListener('change',()=>{aiFiles=[...$('#ai-input').files];renderThumbs(aiFiles,'#ai-preview')});
+function renderThumbs(files,selector){const w=$(selector);w.innerHTML='';files.forEach((f,i)=>{const d=document.createElement('div');d.className='detail-thumb';d.innerHTML=`<img src="${URL.createObjectURL(f)}" alt=""><button type="button">×</button>`;d.querySelector('button').onclick=()=>{files.splice(i,1);renderThumbs(files,selector)};w.appendChild(d)})}
+function bindVideo(id,preview){$('#'+id).addEventListener('change',()=>{const f=$('#'+id).files[0];if(!f)return;$(preview).innerHTML=`<video src="${URL.createObjectURL(f)}" controls muted></video>`})}bindVideo('video-input','#video-preview');bindVideo('video-only-input','#video-only-preview');
+async function upload(file,folder){if(!file)return '';const ext=(file.name.split('.').pop()||'bin').toLowerCase();const path=`works/${folder}/${crypto.randomUUID()}.${ext}`;const {error}=await sb.storage.from(BUCKET).upload(path,file,{upsert:false,cacheControl:'31536000'});if(error)throw error;return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}
+async function saveWork(e){e.preventDefault();const out=$('#form-message');msg(out,'저장 중…');try{const category=$('#category').value,id=$('#work-id').value||crypto.randomUUID(),isEdit=!!$('#work-id').value;let image=$('#image-url').value.trim(),details=[],video_url='';const detailCover=$('#detail-cover-input').files[0],blogCover=$('#blog-cover-input').files[0],socialCover=$('#social-cover-input').files[0],webCover=$('#web-cover-input').files[0];
+if(category==='banner')image=await upload(coverFile,`${id}/cover`)||image;if(category==='detail'){for(const f of detailFiles)details.push(await upload(f,`${id}/details`));image=await upload(detailCover,`${id}/cover`)||details[0]||image;if(!details.length&&!image)throw Error('상세페이지 이미지를 선택해주세요.')}if(category==='blog'){image=await upload(blogCover,`${id}/cover`)||image;if(!$('#blog-url').value.trim())throw Error('블로그 URL을 입력해주세요.')}if(category==='social'){video_url=await upload($('#video-input').files[0],`${id}/video`);image=await upload(socialCover,`${id}/cover`)||image;if(!video_url)throw Error('릴스/SNS 동영상을 선택해주세요.')}if(category==='video'){video_url=await upload($('#video-only-input').files[0],`${id}/video`);if(!video_url)throw Error('영상 파일을 선택해주세요.')}if(category==='ai'){for(const f of aiFiles)details.push(await upload(f,`${id}/ai`));image=details[0]||image;if(!details.length)throw Error('AI 비주얼 이미지를 선택해주세요.')}if(category==='web'){image=await upload(webCover,`${id}/cover`)||image;if(!$('#web-url').value.trim())throw Error('웹사이트 URL을 입력해주세요.')}
+if(!image&&category!=='social'&&category!=='video')throw Error('대표 이미지를 선택해주세요.');const meta={blog_url:$('#blog-url').value.trim(),web_url:$('#web-url').value.trim(),description:$('#description').value.trim()||$('#common-description').value.trim(),video_url,detail_images:details};const payload={id,category,title:$('#title').value.trim(),year:$('#year').value.trim(),image,featured:$('#featured').checked,sort_order:Number($('#sort-order').value)||0,meta};let result=isEdit?await sb.from('works').update(payload).eq('id',id):await sb.from('works').insert(payload);if(result.error&&/meta/i.test(result.error.message||'')){throw Error('Supabase에 meta 컬럼이 아직 없습니다. supabase-setup.sql을 한 번 실행해주세요.')}if(result.error)throw result.error;msg(out,'저장했습니다.');resetForm();loadWorks()}catch(err){console.error(err);msg(out,err.message||'저장 중 오류가 발생했습니다.',true)}}$('#work-form').addEventListener('submit',saveWork);$('#cancel-edit').addEventListener('click',resetForm);
+async function loadWorks(){const {data,error}=await sb.from('works').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:false});if(error){$('#work-list').innerHTML=`<div class="empty">${esc(error.message)}</div>`;return}const rows=data||[];$('#work-count').textContent=rows.length;$('#list-empty').hidden=rows.length!==0;$('#work-list').innerHTML='';rows.forEach(renderRow)}
+function renderRow(w){const image=w.image_url||w.image||((w.meta||{}).detail_images||[])[0]||'';const r=document.createElement('div');r.className='work-row';r.innerHTML=`<img src="${esc(image)}" alt=""><div><b>${esc(w.title||'제목 없음')}</b><span>${esc(w.category||'')} · ${esc(w.year||'')}${w.featured?' · SELECTED':''}</span></div><div class="row-actions"><button type="button" data-edit>수정</button><button type="button" data-delete>삭제</button></div>`;r.querySelector('[data-edit]').onclick=()=>editWork(w);r.querySelector('[data-delete]').onclick=()=>deleteWork(w);$('#work-list').appendChild(r)}
+function editWork(w){const m=w.meta||{};$('#work-id').value=w.id;$('#title').value=w.title||'';$('#category').value=w.category||'banner';$('#year').value=w.year||'';$('#sort-order').value=w.sort_order||0;$('#featured').checked=!!w.featured;showCategoryFields();$('#image-url').value=w.image||'';$('#blog-url').value=m.blog_url||'';$('#web-url').value=m.web_url||'';$('#description').value=m.description||'';$('#common-description').value=m.description||'';$('#form-title').textContent='작업 수정';$('#cancel-edit').hidden=false;$('#cover-preview').innerHTML=w.image?`<img src="${esc(w.image)}" alt="">`:'<span>이미지를 업로드하세요.</span>';$('#detail-preview').innerHTML='';(m.detail_images||[]).forEach(u=>{const d=document.createElement('div');d.className='detail-thumb';d.innerHTML=`<img src="${esc(u)}" alt=""><button type="button">×</button>`;d.querySelector('button').onclick=()=>{m.detail_images=m.detail_images.filter(x=>x!==u);d.remove()};$('#detail-preview').appendChild(d)});window.scrollTo({top:0,behavior:'smooth'})}
+async function deleteWork(w){if(!confirm(`“${w.title||'이 작업'}”을 삭제할까요?`))return;const {error}=await sb.from('works').delete().eq('id',w.id);if(error)return alert(error.message);if($('#work-id').value===w.id)resetForm();loadWorks()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}resetForm();init();
