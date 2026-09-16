@@ -63,6 +63,7 @@ sb.auth.onAuthStateChange((_event, session) => {
 function resetForm() {
   workForm.reset();
   $('#work-id').value = '';
+  $('#category').value = 'banner';
   $('#sort-order').value = 0;
   $('#form-title').textContent = '작업 추가';
   $('#cancel-edit').hidden = true;
@@ -139,11 +140,18 @@ workForm.addEventListener('submit', async (e) => {
     for (const file of detailFiles) uploadedDetails.push(await uploadFile(file, `works/${id}/details`));
     const detailImages = [...existingDetails, ...uploadedDetails];
 
+    // Category values must match the Supabase CHECK constraint exactly.
+    const allowedCategories = ['banner', 'detail', 'blog', 'social', 'video', 'ai', 'web'];
+    const category = $('#category').value;
+    if (!allowedCategories.includes(category)) {
+      throw new Error('카테고리 값이 올바르지 않습니다.');
+    }
+
     // The existing `works` table uses `image` for the representative image.
     // Do not send `image_url`, because that column does not exist in the current schema.
     const payload = {
       id,
-      category: $('#category').value,
+      category,
       title: $('#title').value.trim(),
       year: $('#year').value.trim(),
       image: imageUrl,
@@ -203,7 +211,7 @@ function editWork(work) {
   const image = work.image_url || work.image || '';
   $('#work-id').value = work.id;
   $('#title').value = work.title || '';
-  $('#category').value = work.category || 'BANNER';
+  $('#category').value = work.category || 'banner';
   $('#year').value = work.year || '';
   $('#sort-order').value = work.sort_order || 0;
   $('#featured').checked = !!work.featured;
