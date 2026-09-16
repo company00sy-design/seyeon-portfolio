@@ -29,5 +29,13 @@
   </main>
   <footer><span>SEYEON KIM</span><span>CONTENT DESIGNER · 2026</span></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="script.js"></script>
+  <script>
+    (()=>{
+      const startVideoPreviews=()=>document.querySelectorAll('#work-grid .work-card[data-category="social"] .video-preview video').forEach(v=>{v.muted=true;v.playsInline=true;v.autoplay=true;v.preload='auto';v.play().catch(()=>{});});
+      const grid=document.querySelector('#work-grid');
+      if(grid){new MutationObserver(startVideoPreviews).observe(grid,{childList:true,subtree:true});}
+      window.addEventListener('load',startVideoPreviews);
+    })();
+  </script>
 </body>
 </html>
