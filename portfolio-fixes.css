@@ -3,6 +3,12 @@
 .work-card[data-category="detail"] .detail-preview{aspect-ratio:4/5}
 .work-card[data-category="detail"] .detail-preview img{height:100%;object-fit:cover;object-position:top}
 
+/* Banner / Detail page: 4-column thumbnail layout only */
+#work-grid:has(.work-card[data-category="banner"]){grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+#work-grid:has(.work-card[data-category="banner"]) .work-card[data-category="banner"]{grid-column:auto;width:100%;margin-top:0!important}
+#work-grid:has(.work-card[data-category="detail"]){grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+#work-grid:has(.work-card[data-category="detail"]) .work-card[data-category="detail"]{grid-column:auto;width:100%;margin-top:0!important}
+
 /* Reels / SNS page only: 4-column thumbnail layout */
 #work-grid:has(.work-card[data-category="social"]){grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 #work-grid:has(.work-card[data-category="social"]) .work-card[data-category="social"]{grid-column:auto;width:100%;margin-top:0!important}
@@ -26,8 +32,8 @@
 .embed-fallback-media{display:none}
 
 @media(max-width:800px){
-  #work-grid:has(.work-card[data-category="social"]){grid-template-columns:1fr;gap:0}
-  #work-grid:has(.work-card[data-category="social"]) .work-card[data-category="social"]{width:280px;max-width:100%;grid-column:auto;justify-self:start}
+  #work-grid:has(.work-card[data-category="banner"]),#work-grid:has(.work-card[data-category="detail"]),#work-grid:has(.work-card[data-category="social"]){grid-template-columns:1fr;gap:0}
+  #work-grid:has(.work-card[data-category="banner"]) .work-card[data-category="banner"],#work-grid:has(.work-card[data-category="detail"]) .work-card[data-category="detail"],#work-grid:has(.work-card[data-category="social"]) .work-card[data-category="social"]{width:280px;max-width:100%;grid-column:auto;justify-self:start}
   #work-grid:has(.work-card[data-category="social"]) .work-card[data-category="social"] .video-preview,
   #work-grid:has(.work-card[data-category="social"]) .work-card[data-category="social"] .work-meta{width:280px;max-width:100%}
   .project-card{min-height:220px}
