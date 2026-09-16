@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>SEYEON KIM — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <section id="login-view" class="login-card">
+      <div class="eyebrow">SEYEON KIM / ADMIN</div>
+      <h1>PORTFOLIO<br><em>ADMIN.</em></h1>
+      <form id="login-form">
+        <label>이메일<input id="email" type="email" autocomplete="email" required></label>
+        <label>비밀번호<input id="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">로그인</button>
+        <p id="login-error" class="error" hidden></p>
+      </form>
+    </section>
+
+    <section id="admin-view" hidden>
+      <header class="admin-header">
+        <div><div class="eyebrow">SEYEON KIM / ADMIN</div><h1>WORKS</h1></div>
+        <div class="header-actions"><a href="index.html">홈페이지 보기 ↗</a><button id="logout-btn" class="ghost">로그아웃</button></div>
+      </header>
+
+      <div class="admin-grid">
+        <section class="panel">
+          <div class="panel-head"><h2 id="form-title">작업 추가</h2><button id="cancel-edit" class="text-btn" hidden>취소</button></div>
+          <form id="work-form">
+            <input id="work-id" type="hidden">
+            <label>작업명<input id="title" required placeholder="예: 하우드시스템 5월 프로모션"></label>
+            <div class="two-col">
+              <label>카테고리<select id="category" required><option>BANNER</option><option>DETAIL PAGE</option><option>BLOG</option><option>SOCIAL / VIDEO</option><option>AI VISUAL</option><option>WEB</option></select></label>
+              <label>연도<input id="year" inputmode="numeric" placeholder="2026"></label>
+            </div>
+            <div class="two-col">
+              <label>노출 순서<input id="sort-order" type="number" value="0"></label>
+              <label class="check"><input id="featured" type="checkbox"> Selected Work에 표시</label>
+            </div>
+
+            <div class="upload-box">
+              <div class="upload-head"><div><b>대표 이미지</b><span>JPG / PNG / WEBP</span></div><button type="button" class="upload-btn" data-target="cover-input">이미지 선택</button></div>
+              <input id="cover-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+              <div id="cover-preview" class="cover-preview"><span>대표 이미지를 업로드하세요.</span></div>
+              <input id="image-url" type="url" placeholder="또는 이미지 URL 직접 입력">
+            </div>
+
+            <div class="upload-box">
+              <div class="upload-head"><div><b>상세 이미지</b><span>여러 장 선택 가능</span></div><button type="button" class="upload-btn" data-target="detail-input">이미지 선택</button></div>
+              <input id="detail-input" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+              <div id="detail-preview" class="detail-preview"></div>
+            </div>
+
+            <button class="save-btn" type="submit">저장하기</button>
+            <p id="form-message" class="form-message" hidden></p>
+          </form>
+        </section>
+
+        <section class="panel list-panel">
+          <div class="panel-head"><h2>등록된 작업</h2><span id="work-count" class="count">0</span></div>
+          <div id="work-list" class="work-list"></div>
+          <div id="list-empty" class="empty" hidden>등록된 작업이 없습니다.</div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
