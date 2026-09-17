@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="portfolio-fixes.css?v=20260916-5">
+  <link rel="stylesheet" href="portfolio-fixes.css?v=20260917-2">
 </head>
 <body>
   <!-- Cloudflare Pages auto-deploy test: 2026-09-16 -->
@@ -28,14 +28,6 @@
     <section id="contact" class="contact section-pad"><div class="eyebrow">06 / 연락</div><h2>LET’S MAKE<br><em>SOMETHING.</em></h2><div class="contact-bottom"><a href="mailto:y2kman712@naver.com">y2kman712@naver.com</a><a href="tel:01066357431">010-6635-7431</a></div></section>
   </main>
   <footer><span>SEYEON KIM</span><span>CONTENT DESIGNER · 2026</span></footer>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="script.js"></script>
-  <script>
-    (()=>{
-      const startVideoPreviews=()=>document.querySelectorAll('#work-grid .work-card[data-category="social"] .video-preview video').forEach(v=>{v.muted=true;v.playsInline=true;v.autoplay=true;v.preload='auto';v.play().catch(()=>{});});
-      const grid=document.querySelector('#work-grid');
-      if(grid){new MutationObserver(startVideoPreviews).observe(grid,{childList:true,subtree:true});}
-      window.addEventListener('load',startVideoPreviews);
-    })();
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="script.js?v=20260917-3"></script>
 </body>
 </html>
