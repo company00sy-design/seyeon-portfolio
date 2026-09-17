@@ -32,8 +32,9 @@ function imageCard(w,extra=''){
   }
   if(c==='social'||c==='video'){
     const src=w.image;
+    const poster=c==='social'?(w.meta?.social_poster||''):'';
     const label=c==='social'?'REELS / SNS':'VIDEO';
-    return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="${esc(c)}"><div class="video-preview">${src?`<video src="${esc(src)}" muted loop playsinline autoplay preload="auto" crossorigin="anonymous"></video>`:'<div class="media-placeholder">VIDEO</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>${label}</small></div></div><div class="work-meta"><span>${categoryLabel(c)}</span><h3>${esc(w.title)}</h3></div></article>`;
+    return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="${esc(c)}"><div class="video-preview">${src?`<video src="${esc(src)}" ${poster?`poster="${esc(poster)}"`:''} muted loop playsinline autoplay preload="auto"></video>`:'<div class="media-placeholder">VIDEO</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>${label}</small></div></div><div class="work-meta"><span>${categoryLabel(c)}</span><h3>${esc(w.title)}</h3></div></article>`;
   }
   if(c==='blog'){
     return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="blog"><div class="project-card"><div class="project-card-top"><span>BLOG</span><span>↗</span></div><div class="project-card-main"><h3>${esc(w.title)}</h3><p>${esc(w.description||'프로젝트 소개 보기')}</p></div><span class="project-card-arrow">↗</span></div><div class="work-meta"><span>BLOG</span><h3>${esc(w.title)}</h3></div></article>`;
@@ -60,6 +61,7 @@ function prepareVideoPreviews(root=document){
     video.playsInline=true;
     video.autoplay=true;
     video.preload='auto';
+    if(video.poster){video.play().catch(()=>{});return;}
     const showFirstFrame=()=>{
       if(video.poster)return;
       try{
@@ -70,9 +72,7 @@ function prepareVideoPreviews(root=document){
         if(!ctx)return;
         ctx.drawImage(video,0,0,canvas.width,canvas.height);
         video.poster=canvas.toDataURL('image/jpeg',0.82);
-      }catch(error){
-        // If the storage response does not allow canvas access, autoplay still provides the preview.
-      }
+      }catch(error){}
     };
     video.addEventListener('loadeddata',showFirstFrame,{once:true});
     video.addEventListener('canplay',()=>video.play().catch(()=>{}),{once:true});
