@@ -10,10 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="portfolio-fixes.css?v=20260917-2">
+  <link rel="stylesheet" href="portfolio-fixes.css?v=20260917-3">
 </head>
 <body>
-  <!-- Cloudflare Pages auto-deploy test: 2026-09-16 -->
   <header class="site-header">
     <a class="logo" href="#top">SEYEON KIM</a>
     <nav><a href="#works">작업</a><a href="#about">소개</a><a href="#contact">연락</a></nav>
@@ -28,6 +27,26 @@
     <section id="contact" class="contact section-pad"><div class="eyebrow">06 / 연락</div><h2>LET’S MAKE<br><em>SOMETHING.</em></h2><div class="contact-bottom"><a href="mailto:y2kman712@naver.com">y2kman712@naver.com</a><a href="tel:01066357431">010-6635-7431</a></div></section>
   </main>
   <footer><span>SEYEON KIM</span><span>CONTENT DESIGNER · 2026</span></footer>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="script.js?v=20260917-4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="script.js?v=20260917-4"></script>
+  <script>
+    (function(){
+      function proxyInstagramThumbs(){
+        document.querySelectorAll('.social-thumb-preview img').forEach(function(img){
+          if(img.dataset.instagramProxy==='done') return;
+          var src=img.getAttribute('src')||'';
+          var match=src.match(/https?:\/\/(?:www\.)?instagram\.com\/(reel|reels|p)\/([^/?#]+)/i);
+          if(!match) return;
+          img.dataset.instagramProxy='done';
+          var type=match[1].toLowerCase()==='reels'?'reel':match[1].toLowerCase();
+          var original='https://www.instagram.com/'+type+'/'+match[2]+'/';
+          img.src='/api/instagram-thumb?url='+encodeURIComponent(original);
+        });
+      }
+      new MutationObserver(proxyInstagramThumbs).observe(document.body,{childList:true,subtree:true});
+      proxyInstagramThumbs();
+    })();
+  </script>
 </body>
 </html>
