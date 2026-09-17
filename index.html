@@ -29,24 +29,6 @@
   <footer><span>SEYEON KIM</span><span>CONTENT DESIGNER · 2026</span></footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="script.js?v=20260917-4"></script>
-  <script>
-    (function(){
-      function proxyInstagramThumbs(){
-        document.querySelectorAll('.social-thumb-preview img').forEach(function(img){
-          if(img.dataset.instagramProxy==='done') return;
-          var src=img.getAttribute('src')||'';
-          var match=src.match(/https?:\/\/(?:www\.)?instagram\.com\/(reel|reels|p)\/([^/?#]+)/i);
-          if(!match) return;
-          img.dataset.instagramProxy='done';
-          var type=match[1].toLowerCase()==='reels'?'reel':match[1].toLowerCase();
-          var original='https://www.instagram.com/'+type+'/'+match[2]+'/';
-          img.src='/api/instagram-thumb?url='+encodeURIComponent(original);
-        });
-      }
-      new MutationObserver(proxyInstagramThumbs).observe(document.body,{childList:true,subtree:true});
-      proxyInstagramThumbs();
-    })();
-  </script>
+  <script src="script.js?v=20260917-5"></script>
 </body>
 </html>
