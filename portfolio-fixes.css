@@ -63,3 +63,17 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
 .intro .display-copy{font-size:clamp(27px,7.4vw,42px);line-height:1.2}
 .cap-list h3{font-size:clamp(28px,8vw,40px);line-height:.98}
 }
+
+/* Final typography scale */
+.intro .display-copy{font-size:clamp(38px,3.5vw,56px)!important;line-height:1.18!important}
+.cap-list h3{font-size:clamp(28px,3vw,46px)!important;line-height:.98!important}
+.ai-section h2{font-size:clamp(52px,5.5vw,82px)!important;line-height:.98!important}
+.about-title{font-size:clamp(42px,5vw,70px)!important}
+.about-contact h2{font-size:clamp(48px,7vw,100px)!important}
+@media(max-width:800px){
+.intro .display-copy{font-size:clamp(25px,6.5vw,36px)!important;line-height:1.2!important}
+.cap-list h3{font-size:clamp(26px,7vw,36px)!important;line-height:1!important}
+.ai-section h2{font-size:clamp(42px,10vw,58px)!important;line-height:1!important}
+.about-title{font-size:clamp(38px,12vw,52px)!important}
+.about-contact h2{font-size:clamp(44px,15vw,72px)!important}
+}
