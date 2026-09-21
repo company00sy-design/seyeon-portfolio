@@ -32,7 +32,7 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
 .work-card[data-category="photo"] .work-meta{border-bottom:1px solid #d2d0c8}
 
 /* Minimal motion system */
-.section-reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease var(--reveal-delay,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--reveal-delay,0s)}
+.section-reveal{opacity:1;transform:translateY(24px);transition:opacity .8s ease var(--reveal-delay,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--reveal-delay,0s)}
 .section-reveal.is-visible{opacity:1;transform:none}
 .work-card.reveal{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1)}
 .work-card.reveal.is-visible{opacity:1;transform:none}
