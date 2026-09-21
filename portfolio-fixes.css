@@ -54,3 +54,12 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
 *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 .section-reveal,.work-card.reveal{opacity:1!important;transform:none!important}
 }
+
+
+/* Typography refinement */
+.intro .display-copy{font-size:clamp(34px,4.8vw,72px);line-height:1.14;letter-spacing:-.055em}
+.cap-list h3{font-size:clamp(30px,4.2vw,62px);line-height:.95;letter-spacing:-.055em}
+@media(max-width:800px){
+.intro .display-copy{font-size:clamp(27px,7.4vw,42px);line-height:1.2}
+.cap-list h3{font-size:clamp(28px,8vw,40px);line-height:.98}
+}
