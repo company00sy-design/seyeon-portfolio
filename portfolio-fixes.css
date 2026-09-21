@@ -34,7 +34,7 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
 /* Minimal motion system */
 .section-reveal{opacity:1;transform:translateY(24px);transition:opacity .8s ease var(--reveal-delay,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--reveal-delay,0s)}
 .section-reveal.is-visible{opacity:1;transform:none}
-.work-card.reveal{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1)}
+.work-card.reveal{opacity:1;transform:translateY(18px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1)}
 .work-card.reveal.is-visible{opacity:1;transform:none}
 .work-card:nth-child(2){transition-delay:.05s}.work-card:nth-child(3){transition-delay:.1s}.work-card:nth-child(4){transition-delay:.15s}
 .filter{transition:background-color .25s ease,color .25s ease,border-color .25s ease,transform .25s ease}
