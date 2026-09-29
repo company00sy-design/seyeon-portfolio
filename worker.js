@@ -2,7 +2,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/instagram-thumb') {
+    if (url.pathname === '/admin' || url.pathname === '/admin/') {\n      return env.ASSETS.fetch(new Request(new URL('/admin.html', request.url), request));\n    }\n\n    if (url.pathname === '/api/instagram-thumb') {
       const target = url.searchParams.get('url');
       if (!target) return new Response('Missing url', { status: 400 });
 
