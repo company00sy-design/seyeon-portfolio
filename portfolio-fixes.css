@@ -267,3 +267,17 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
   #work-grid{gap:16px 8px!important}
   .work-meta h3,.work-meta .work-title{font-size:9px!important}
 }
+
+
+/* Mobile blog cards: compact landscape preview */
+@media(max-width:800px){
+  #work-grid .work-card[data-category="blog"]{grid-column:span 2!important}
+  #work-grid .work-card[data-category="blog"] .blog-preview,
+  #work-grid .work-card[data-category="blog"] .work-preview{aspect-ratio:16/7!important;max-height:180px!important;overflow:hidden!important}
+  #work-grid .work-card[data-category="blog"] .blog-preview img,
+  #work-grid .work-card[data-category="blog"] .work-preview img{width:100%!important;height:100%!important;object-fit:cover!important}
+}
+@media(max-width:420px){
+  #work-grid .work-card[data-category="blog"] .blog-preview,
+  #work-grid .work-card[data-category="blog"] .work-preview{aspect-ratio:16/7!important;max-height:150px!important}
+}
