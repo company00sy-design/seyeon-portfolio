@@ -288,3 +288,9 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
 @media(max-width:800px){
   .cap-list h3 .mobile-title-break{display:inline}
 }
+
+/* Mobile capability title line breaks: allow explicit <br> to work. */
+@media(max-width:800px){
+  .cap-list h3{white-space:normal!important;}
+  .cap-list h3 .mobile-title-break{display:inline!important;}
+}
