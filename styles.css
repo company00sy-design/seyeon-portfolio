@@ -2,3 +2,9 @@
 
 /* WORK: keep a single divider between WORK heading and category controls */
 .work-index-head{border-top:0!important;}
+
+
+/* WORK category spacing: pull category controls closer to WORK heading */
+.work-index-head{margin-top:70px!important;}
+@media(max-width:800px){.work-index-head{margin-top:32px!important;}}
+@media(max-width:560px){.work-index-head{margin-top:28px!important;}}
