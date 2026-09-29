@@ -421,3 +421,49 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
     line-height:1.7!important;
   }
 }
+
+
+/* Intro — clean alignment pass */
+.intro .intro-copy{max-width:1000px!important;margin-left:0!important;margin-right:auto!important}
+.intro .display-copy{
+  font-size:clamp(34px,3.35vw,52px)!important;
+  line-height:1.2!important;
+  letter-spacing:-.055em!important;
+  font-weight:500!important;
+}
+.intro .display-copy em{color:inherit!important}
+.intro .intro-support{
+  max-width:560px!important;
+  margin:38px 0 0!important;
+  font-size:15px!important;
+  line-height:1.75!important;
+  letter-spacing:-.02em!important;
+}
+.intro .body-copy{
+  max-width:560px!important;
+  margin:38px 0 0!important;
+  padding-top:15px!important;
+  font-size:11px!important;
+  line-height:1.7!important;
+}
+@media(max-width:800px){
+  .intro .intro-copy{max-width:none!important;margin:0!important}
+  .intro .display-copy{
+    font-size:clamp(27px,6.7vw,35px)!important;
+    line-height:1.24!important;
+    letter-spacing:-.055em!important;
+  }
+  .intro .intro-support{
+    max-width:none!important;
+    margin:30px 0 0!important;
+    font-size:12px!important;
+    line-height:1.75!important;
+  }
+  .intro .body-copy{
+    max-width:none!important;
+    margin:30px 0 0!important;
+    padding-top:13px!important;
+    font-size:10px!important;
+    line-height:1.7!important;
+  }
+}
