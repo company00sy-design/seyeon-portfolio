@@ -92,3 +92,10 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
     white-space:nowrap!important;
   }
 }
+
+/* Photography / retouching: 3-column cards */
+#work-grid:has(.work-card[data-category="photo"]) .work-card[data-category="photo"]{
+  grid-column:span 1!important;
+  width:100%!important;
+  max-width:100%!important;
+}
