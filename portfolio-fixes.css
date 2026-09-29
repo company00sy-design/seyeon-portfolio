@@ -281,3 +281,10 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
   #work-grid .work-card[data-category="blog"] .blog-preview,
   #work-grid .work-card[data-category="blog"] .work-preview{aspect-ratio:16/7!important;max-height:150px!important}
 }
+
+
+/* Capability titles: force selected titles to two lines on mobile only */
+.mobile-title-break{display:none}
+@media(max-width:800px){
+  .cap-list h3 .mobile-title-break{display:inline}
+}
