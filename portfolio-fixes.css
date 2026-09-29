@@ -369,3 +369,55 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
     line-height:1.3!important;
   }
 }
+
+
+/* Intro — editorial typography hierarchy */
+.intro .intro-copy{max-width:1180px;margin-left:auto}
+.intro .display-copy{
+  margin:0;
+  font-size:clamp(46px,5.1vw,78px)!important;
+  line-height:1.1!important;
+  letter-spacing:-.065em!important;
+  font-weight:500!important;
+}
+.intro .display-copy em{font-style:normal;color:#77736b}
+.intro .intro-support{
+  margin:58px 0 0 auto!important;
+  max-width:640px;
+  font-size:clamp(16px,1.35vw,20px)!important;
+  line-height:1.75!important;
+  letter-spacing:-.025em!important;
+  font-weight:400!important;
+}
+.intro .body-copy{
+  margin:54px 0 0 auto!important;
+  max-width:640px;
+  padding-top:18px;
+  border-top:1px solid #d2d0c8;
+  font-size:12px!important;
+  line-height:1.7!important;
+  color:#77736b;
+}
+@media(max-width:800px){
+  .intro .intro-copy{margin-left:0;max-width:none}
+  .intro .display-copy{
+    font-size:clamp(30px,8.3vw,44px)!important;
+    line-height:1.16!important;
+    letter-spacing:-.06em!important;
+  }
+  .intro .display-copy em{color:#77736b}
+  .intro .intro-support{
+    margin:38px 0 0!important;
+    max-width:none;
+    font-size:13px!important;
+    line-height:1.75!important;
+    letter-spacing:-.02em!important;
+  }
+  .intro .body-copy{
+    margin:36px 0 0!important;
+    max-width:none;
+    padding-top:14px;
+    font-size:11px!important;
+    line-height:1.7!important;
+  }
+}
