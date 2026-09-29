@@ -61,6 +61,22 @@ export default {
       return response;
     }
 
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+    const contentType = response.headers.get('content-type') || '';
+
+    // HTML must always resolve to the newest Cloudflare deployment.
+    // Static CSS/JS already use versioned query strings for browser cache busting.
+    if (contentType.includes('text/html')) {
+      const headers = new Headers(response.headers);
+      headers.set('Cache-Control', 'no-store, max-age=0');
+      headers.set('X-Portfolio-Version', '2026-09-29');
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    }
+
+    return response;
   },
 };
