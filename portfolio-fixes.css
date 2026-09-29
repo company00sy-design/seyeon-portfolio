@@ -99,3 +99,151 @@ footer{padding:18px 5vw;font-size:9px;gap:12px;flex-wrap:wrap}
   width:100%!important;
   max-width:100%!important;
 }
+
+/* Mobile UX pass */
+@media(max-width:800px){
+  html{scroll-behavior:smooth}
+  body{overflow-x:hidden;font-size:12px}
+  .site-header{
+    height:54px!important;
+    padding:14px 5vw!important;
+    position:fixed;
+    top:0;
+    z-index:1000;
+    background:rgba(245,244,240,.94);
+    backdrop-filter:blur(10px);
+  }
+  .site-header .logo{font-size:9px}
+  .site-header nav{gap:14px!important}
+  .site-header nav a{font-size:10px;white-space:nowrap}
+  .section-pad{padding:64px 5vw!important}
+  .hero{
+    min-height:100svh;
+    padding:92px 5vw 28px!important;
+    display:flex;
+    flex-direction:column;
+  }
+  .hero-kicker{font-size:9px}
+  .hero h1{
+    font-size:18vw!important;
+    line-height:.86!important;
+    letter-spacing:-.08em!important;
+    margin:58px 0 auto!important;
+  }
+  .hero-bottom{padding-top:24px;gap:16px}
+  .hero-bottom p{font-size:11px!important;line-height:1.55;max-width:220px}
+  .circle-link{width:42px;height:42px}
+  .intro .eyebrow,.capabilities .eyebrow,.ai-section .eyebrow,.about .eyebrow{margin-bottom:28px}
+  .intro .display-copy{
+    font-size:clamp(24px,6.2vw,34px)!important;
+    line-height:1.24!important;
+  }
+  .body-copy{font-size:12px!important;line-height:1.7!important;margin-top:30px!important}
+  .section-head h2{font-size:16vw!important}
+  .work-index-head{
+    margin-top:48px!important;
+    padding:14px 0!important;
+  }
+  .filters{
+    gap:6px!important;
+    margin-top:12px!important;
+    overflow-x:auto;
+    flex-wrap:nowrap!important;
+    padding-bottom:5px;
+    scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar{display:none}
+  .filter{
+    flex:0 0 auto;
+    padding:7px 10px!important;
+    font-size:9px!important;
+  }
+  #work-grid{margin-top:22px!important}
+  .archive-grid .work-card{
+    margin-bottom:26px!important;
+  }
+  .work-meta{
+    padding:9px 0 18px!important;
+    font-size:9px!important;
+  }
+  .work-meta h3,.work-meta .work-title{font-size:10px!important}
+  .archive-grid .work-card[data-category="social"]{
+    width:min(100%,280px)!important;
+    max-width:280px!important;
+  }
+  #work-grid:has(.work-card[data-category="photo"]) .work-card[data-category="photo"]{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .work-card[data-category="photo"] .photo-preview{aspect-ratio:4/3!important}
+  .cap-list{margin-top:20px!important}
+  .cap-list article{
+    grid-template-columns:28px minmax(0,1fr)!important;
+    gap:8px 10px!important;
+    padding:22px 0!important;
+  }
+  .cap-list span{font-size:8px!important}
+  .cap-list h3{
+    font-size:clamp(19px,5.2vw,28px)!important;
+    white-space:nowrap!important;
+    letter-spacing:-.045em!important;
+  }
+  .cap-list p{
+    font-size:10px!important;
+    line-height:1.55!important;
+    margin-top:8px!important;
+  }
+  .ai-section{padding-top:64px!important;padding-bottom:64px!important}
+  .ai-section h2{
+    font-size:clamp(40px,10vw,56px)!important;
+    line-height:1!important;
+  }
+  .ai-layout{margin-top:32px!important}
+  .ai-flow{margin-top:34px!important}
+  .ai-flow div{padding:14px 0!important}
+  .ai-flow span{font-size:10px!important}
+  .about-grid{margin-top:30px!important}
+  .portrait-placeholder{width:min(160px,48vw)!important;margin-bottom:28px!important}
+  .about-title{font-size:clamp(36px,11vw,50px)!important}
+  .about-text{font-size:12px!important;line-height:1.7!important;margin:28px 0!important}
+  .profile-data{gap:18px!important}
+  .profile-data>div strong{font-size:11px!important}
+  .about-lists{margin-top:56px!important}
+  .about-lists>div+div{margin-top:52px!important}
+  .career-list li,.cert-list li{
+    grid-template-columns:78px minmax(0,1fr)!important;
+    gap:8px!important;
+    padding:13px 0!important;
+  }
+  .career-list b,.cert-list b{font-size:10px!important}
+  .career-list em{font-size:9px!important}
+  .about-contact{margin-top:60px!important;min-height:48vh!important}
+  .about-contact h2{
+    font-size:clamp(44px,14vw,68px)!important;
+    margin:48px 0!important;
+  }
+  footer{padding:16px 5vw!important;font-size:8px!important}
+  .project-modal{padding:8px!important}
+  .project-modal-content{
+    width:100%!important;
+    max-height:94svh!important;
+    padding:14px!important;
+    border-radius:0!important;
+  }
+  .project-modal-head{margin-bottom:12px!important}
+  .project-modal-head h3{font-size:16px!important}
+  .detail-viewer,.detail-viewer-stack{max-height:78svh!important}
+  .embed-social iframe{min-height:560px!important}
+  .embed-instagram iframe{height:620px!important}
+  .embed-blog iframe{height:72svh!important;min-height:480px!important}
+  .embed-web iframe{height:68svh!important;min-height:440px!important}
+}
+@media(max-width:420px){
+  .site-header nav{gap:10px!important}
+  .site-header nav a{font-size:9px}
+  .hero h1{font-size:19vw!important}
+  .section-pad{padding-left:4.5vw!important;padding-right:4.5vw!important}
+  .cap-list h3{font-size:clamp(18px,5vw,24px)!important}
+  .career-list li,.cert-list li{grid-template-columns:70px minmax(0,1fr)!important}
+  .archive-grid .work-card[data-category="social"]{width:min(100%,270px)!important;max-width:270px!important}
+}
