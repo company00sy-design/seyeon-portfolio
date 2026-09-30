@@ -69,7 +69,7 @@ export default {
     if (contentType.includes('text/html')) {
       const headers = new Headers(response.headers);
       headers.set('Cache-Control', 'no-store, max-age=0');
-      headers.set('X-Portfolio-Version', '2026-09-29');
+      headers.set('X-Portfolio-Version', '2026-09-30');
       return new Response(response.body, {
         status: response.status,
         statusText: response.statusText,
@@ -77,6 +77,13 @@ export default {
       });
     }
 
-    return response;
+    // HTML is kept fresh; versioned static assets can be cached aggressively.
+    const headers = new Headers(response.headers);
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   },
 };
