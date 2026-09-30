@@ -28,7 +28,33 @@ $('#logout-btn')?.addEventListener('click',async()=>{await db.auth.signOut();set
 function getPlatformFromUrl(url){try{const u=new URL(String(url||''));const host=u.hostname.toLowerCase().replace(/^www\./,'').replace(/^m\./,'');if(host.includes('youtube')||host==='youtu.be')return 'youtube';if(host==='instagram.com')return 'instagram';}catch{}return 'instagram';}
 function categoryFromUi(v){const map={'BANNER':'banner','DETAIL PAGE':'detail','BLOG':'blog','SOCIAL / REELS':'social','SOCIAL / VIDEO':'social','VIDEO':'video','AI VISUAL':'ai','PHOTO / RETOUCHING':'photo','WEB':'web'};return map[v]||String(v||'').toLowerCase();}
 function uiCategory(v){const map={banner:'BANNER',detail:'DETAIL PAGE',blog:'BLOG',social:'SOCIAL / REELS',video:'VIDEO',ai:'AI VISUAL',photo:'PHOTO / RETOUCHING',web:'WEB'};return map[v]||v;}
-async function uploadFile(file,path){if(!file)return null;const {error}=await db.storage.from('portfolio').upload(path,file,{upsert:true,cacheControl:'3600'});if(error)throw error;return db.storage.from('portfolio').getPublicUrl(path).data.publicUrl;}
+async function optimizeImage(file){
+  if(!file||!file.type.startsWith('image/')||/image\/(gif|svg\+xml|avif)/i.test(file.type))return file;
+  try{
+    const bitmap=await createImageBitmap(file);
+    const max=2400;
+    const scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
+    const width=Math.max(1,Math.round(bitmap.width*scale));
+    const height=Math.max(1,Math.round(bitmap.height*scale));
+    const canvas=document.createElement('canvas');
+    canvas.width=width;canvas.height=height;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(bitmap,0,0,width,height);
+    bitmap.close?.();
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.86));
+    if(!blob||blob.size>=file.size*0.92)return file;
+    return new File([blob],(file.name.replace(/\.[^.]+$/,'')||'image')+'.webp',{type:'image/webp',lastModified:Date.now()});
+  }catch{return file;}
+}
+async function uploadFile(file,path){
+  if(!file)return null;
+  const optimized=await optimizeImage(file);
+  const ext=/\.webp$/i.test(optimized.name)?'.webp':'';
+  const uploadPath=path.replace(/\.(jpe?g|png|webp)$/i,'')+ext;
+  const {error}=await db.storage.from('portfolio').upload(uploadPath,optimized,{upsert:true,cacheControl:'31536000',contentType:optimized.type||undefined});
+  if(error)throw error;
+  return db.storage.from('portfolio').getPublicUrl(uploadPath).data.publicUrl;
+}
 function setCategoryRequired(active){const ids=['blog-url','social-url','web-url','social-platform'];ids.forEach(id=>{const el=$(`#${id}`);if(el)el.required=false;});if(active==='blog')$('#blog-url')?.setAttribute('required','');if(active==='social'){ $('#social-url')?.setAttribute('required',''); $('#social-platform')?.setAttribute('required',''); }if(active==='web')$('#web-url')?.setAttribute('required','');}
 function resetForm(){editingId=null;detailFiles=[];coverFile=null;detailCoverFile=null;socialCoverFile=null;aiFiles=[];photoFiles=[];videoFile=null;webFiles=[];webCoverFile=null;$('#work-form')?.reset();const title=$('#form-title');if(title)title.textContent='작업 추가';const count=$('#detail-count');if(count)count.textContent='0장 선택됨';previewImage(null,'#cover-preview');previewImage(null,'#detail-cover-preview');previewImage(null,'#social-cover-preview');if($('#social-platform'))$('#social-platform').value='instagram';previewImages([],'#detail-preview');previewImages([],'#ai-preview');previewImages([],'#photo-preview');previewVideo(null,'#video-only-preview');previewImage(null,'#web-cover-preview');previewImages([],'#web-preview');$('.category-fields').forEach(x=>x.hidden=true);const banner=$('#fields-banner');if(banner)banner.hidden=false;const cat=$('#category');if(cat)cat.value='banner';setCategoryRequired('banner');const cancel=$('#cancel-edit');if(cancel)cancel.hidden=true;}
 function showCategoryFields(){const c=$('#category')?.value||'banner';$$('.category-fields').forEach(x=>x.hidden=true);const target=$(`#fields-${categoryFromUi(c)}`);if(target)target.hidden=false;setCategoryRequired(c);}
