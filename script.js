@@ -22,25 +22,27 @@ function imageCard(w,extra=''){
   if(c==='detail'){const thumb=w.image||w.detail_images[0]||'';return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="detail"><div class="detail-preview"><div class="detail-preview-inner">${thumb?`<img src="${esc(thumb)}" alt="${esc(w.title)}" loading="lazy">`:'<div class="media-placeholder">DETAIL PAGE</div>'}<span class="detail-preview-label">VIEW FULL PAGE ↗</span></div></div><div class="work-meta"><span>DETAIL PAGE</span><h3>${esc(w.title)}</h3></div></article>`;}
   if(c==='social'){
     const url=w.meta?.social_url||'';
-    const instagram=!!getInstagramPath(url);
+    const platform=w.meta?.social_platform||((getYouTubeId(url))?'youtube':(getInstagramPath(url)?'instagram':''));
     const youtubeId=getYouTubeId(url);
-    const platform=instagram?'instagram':youtubeId?'youtube':'social';
-    const thumb=instagram
-      ? '/api/instagram-thumb?url='+encodeURIComponent(url)
-      : youtubeId
+    const uploadedThumb=w.image||'';
+    const thumb=uploadedThumb||(
+      platform==='youtube'&&youtubeId
         ? 'https://i.ytimg.com/vi/'+encodeURIComponent(youtubeId)+'/maxresdefault.jpg'
-        : '';
-    const icon=instagram
+        : platform==='instagram'
+          ? '/api/instagram-thumb?url='+encodeURIComponent(url)
+          : ''
+    );
+    const icon=platform==='instagram'
       ? '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5"></rect><circle cx="12" cy="12" r="4.1"></circle><circle cx="17.4" cy="6.7" r="1.1" class="fill"></circle></svg>'
-      : youtubeId
-        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 7.2a2.7 2.7 0 0 0-1.9-1.9C17.8 4.8 12 4.8 12 4.8s-5.8 0-7.5.5a2.7 2.7 0 0 0-1.9 1.9C2.1 8.9 2.1 12 2.1 12s0 3.1.5 4.8a2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.5.5 7.5.5s5.8 0 7.5-.5a2.7 2.7 0 0 0 1.9-1.9c.5-1.7.5-4.8.5-4.8s0-3.1-.5-4.8Z"></path><path class="play" d="m10.2 8.8 5.2 3.2-5.2 3.2V8.8Z"></path></svg>'
+      : platform==='youtube'
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="yt" d="M21.4 7.2a2.7 2.7 0 0 0-1.9-1.9C17.8 4.8 12 4.8 12 4.8s-5.8 0-7.5.5a2.7 2.7 0 0 0-1.9 1.9C2.1 8.9 2.1 12 2.1 12s0 3.1.5 4.8a2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.5.5 7.5.5s5.8 0 7.5-.5a2.7 2.7 0 0 0 1.9-1.9c.5-1.7.5-4.8-.5-4.8Z"></path><path class="play" d="m10.2 8.8 5.2 3.2-5.2-3.2Z"></path></svg>'
         : '';
-    const fallback=youtubeId
+    const fallback=platform==='youtube'&&youtubeId
       ? "this.src='https://i.ytimg.com/vi/"+encodeURIComponent(youtubeId)+"/hqdefault.jpg'"
       : "this.style.opacity='0'";
     return '<article class="work-card '+extra+'" data-id="'+esc(w.id)+'" data-category="social"><div class="social-thumb-preview '+platform+'">'+
       (thumb ? '<img src="'+esc(thumb)+'" alt="'+esc(w.title)+'" loading="lazy" decoding="async" onerror="'+fallback+'">' : '<div class="media-placeholder">SOCIAL / VIDEO</div>')+
-      (icon ? '<span class="social-platform" aria-label="'+(instagram?'Instagram':'YouTube')+'">'+icon+'</span>' : '')+
+      (icon ? '<span class="social-platform" aria-label="'+(platform==='instagram'?'Instagram':'YouTube')+'">'+icon+'</span>' : '')+
       '<span class="social-view">VIEW ↗</span></div><div class="work-meta"><span>SOCIAL / VIDEO</span><h3>'+esc(w.title)+'</h3></div></article>';
   }
   if(c==='video'){const src=w.image;return `<article class="work-card ${extra}" data-id="${esc(w.id)}" data-category="video"><div class="video-preview">${src?`<video src="${esc(src)}" muted loop playsinline autoplay preload="metadata"></video>`:'<div class="media-placeholder">VIDEO</div>'}<div class="video-overlay"><span class="play-icon">▶</span><small>VIDEO</small></div></div><div class="work-meta"><span>VIDEO</span><h3>${esc(w.title)}</h3></div></article>`;}
