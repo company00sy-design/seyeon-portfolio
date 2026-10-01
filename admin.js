@@ -97,6 +97,28 @@ async function optimizeExistingImage(url){
     return url;
   }
 }
+async function createExistingThumbnail(url){
+  if(!url||!/^https?:\/\//i.test(url))return null;
+  try{
+    const parsed=new URL(url);
+    const marker='/storage/v1/object/public/portfolio/';
+    const idx=parsed.pathname.indexOf(marker);
+    if(idx<0)return null;
+    const path=decodeURIComponent(parsed.pathname.slice(idx+marker.length));
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok)return null;
+    const blob=await res.blob();
+    if(!blob.type.startsWith('image/')||/image\/(gif|svg\+xml|avif)/i.test(blob.type))return null;
+    const thumb=await createThumbnail(new File([blob],path.split('/').pop()||'image',{type:blob.type}));
+    const thumbPath=path.replace(/\.(jpe?g|png|webp)$/i,'')+'-thumb.webp';
+    const {error}=await db.storage.from('portfolio').upload(thumbPath,thumb,{upsert:true,cacheControl:'31536000',contentType:'image/webp'});
+    if(error)throw error;
+    return db.storage.from('portfolio').getPublicUrl(thumbPath).data.publicUrl+'?v=20261001';
+  }catch(err){
+    console.warn('Thumbnail generation skipped:',url,err);
+    return null;
+  }
+}
 async function optimizeExistingWorks(){
   const btn=$('#optimize-existing-btn');
   if(!btn||!currentUser)return;
@@ -111,9 +133,12 @@ async function optimizeExistingWorks(){
     for(const w of data||[]){
       let changed=false;
       let image=w.image_url||w.image||'';
+      let meta={...(w.meta||{})};
       if(image){
         const optimized=await optimizeExistingImage(image);
         if(optimized!==image){image=optimized;changed=true;}
+        const thumb=await createExistingThumbnail(image);
+        if(thumb&&thumb!==meta.thumbnail_url){meta.thumbnail_url=thumb;changed=true;}
         done++;btn.textContent='최적화 중 '+done+'/'+total;
       }
       let detail=parseImages(w.detail_images);
@@ -128,7 +153,7 @@ async function optimizeExistingWorks(){
         detail=next;
       }
       if(changed){
-        const payload={};
+        const payload={meta};
         if(image)payload.image=image;
         if(detail.length)payload.detail_images=detail;
         const {error:updateError}=await db.from('works').update(payload).eq('id',w.id);
