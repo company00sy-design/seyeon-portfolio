@@ -93,12 +93,85 @@ async function fetchInstagramThumbnail(url){
     return null;
   }
 }
+async function compressVideo(file,maxBytes=45*1024*1024){
+  if(!file||!file.type.startsWith('video/'))return file;
+  // Supabase Storage의 파일 크기 제한에 걸리지 않도록 브라우저에서 먼저 압축합니다.
+  if(file.size<=maxBytes)return file;
+  if(!window.MediaRecorder)throw new Error('이 브라우저에서는 동영상 자동 압축을 지원하지 않습니다. Chrome 또는 Edge에서 다시 시도해주세요.');
+  return new Promise((resolve,reject)=>{
+    const video=document.createElement('video');
+    const objectUrl=URL.createObjectURL(file);
+    let recorder=null,stream=null,audioContext=null,audioSource=null,stopped=false;
+    const cleanup=()=>{URL.revokeObjectURL(objectUrl);try{stream?.getTracks().forEach(t=>t.stop());}catch{}try{audioContext?.close();}catch{}};
+    const fail=err=>{if(stopped)return;stopped=true;cleanup();reject(err instanceof Error?err:new Error(String(err)));};
+    video.muted=false;video.playsInline=true;video.preload='metadata';
+    video.onloadedmetadata=async()=>{
+      try{
+        const duration=Number.isFinite(video.duration)&&video.duration>0?video.duration:60;
+        const maxDimension=1080;
+        const scale=Math.min(1,maxDimension/Math.max(video.videoWidth||1280,video.videoHeight||720));
+        const width=Math.max(2,Math.round((video.videoWidth||1280)*scale/2)*2);
+        const height=Math.max(2,Math.round((video.videoHeight||720)*scale/2)*2);
+        const canvas=document.createElement('canvas');
+        canvas.width=width;canvas.height=height;
+        const ctx=canvas.getContext('2d',{alpha:false});
+        if(!ctx)throw new Error('동영상 압축용 캔버스를 만들 수 없습니다.');
+        const canvasStream=canvas.captureStream(30);
+        stream=canvasStream;
+        // 오디오가 있는 경우 원본 오디오를 Web Audio로 연결합니다.
+        try{
+          audioContext=new (window.AudioContext||window.webkitAudioContext)();
+          audioSource=audioContext.createMediaElementSource(video);
+          const dest=audioContext.createMediaStreamDestination();
+          audioSource.connect(dest);
+          audioSource.connect(audioContext.destination);
+          dest.stream.getAudioTracks().forEach(t=>canvasStream.addTrack(t));
+        }catch(err){console.warn('오디오 트랙 압축 생략:',err);}
+        const mimeTypes=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+        const mimeType=mimeTypes.find(t=>MediaRecorder.isTypeSupported(t));
+        if(!mimeType)throw new Error('WebM 동영상 압축을 지원하지 않는 브라우저입니다. Chrome 또는 Edge에서 다시 시도해주세요.');
+        // 약 2.8Mbps 영상 + 96kbps 오디오를 목표로 합니다.
+        const videoBitsPerSecond=2800000;
+        const audioBitsPerSecond=96000;
+        const chunks=[];
+        recorder=new MediaRecorder(canvasStream,{mimeType,videoBitsPerSecond,audioBitsPerSecond});
+        recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data);};
+        recorder.onerror=e=>fail(e.error||new Error('동영상 압축 중 오류가 발생했습니다.'));
+        recorder.onstop=()=>{
+          if(stopped)return;
+          stopped=true;
+          cleanup();
+          const blob=new Blob(chunks,{type:mimeType});
+          if(!blob.size) return reject(new Error('동영상 압축 결과가 비어 있습니다.'));
+          const compressed=new File([blob],(file.name.replace(/\.[^.]+$/,'')||'video')+'.webm',{type:mimeType,lastModified:Date.now()});
+          if(compressed.size>maxBytes){
+            // 아주 긴 영상은 더 낮은 비트레이트로 한 번 더 압축해야 할 수 있으므로 명확한 안내를 표시합니다.
+            return reject(new Error('압축 후에도 동영상 용량이 45MB를 초과합니다. 영상 길이를 줄인 뒤 다시 등록해주세요.'));
+          }
+          resolve(compressed);
+        };
+        let started=false;
+        const draw=()=>{
+          if(stopped)return;
+          if(video.ended){if(started)recorder.stop();return;}
+          ctx.drawImage(video,0,0,width,height);
+          requestAnimationFrame(draw);
+        };
+        recorder.start(1000);
+        started=true;
+        await video.play();
+        draw();
+      }catch(err){fail(err);}
+    };
+    video.onerror=()=>fail(new Error('동영상 파일을 읽을 수 없습니다.'));
+    video.src=objectUrl;
+  });
+}
 async function uploadVideoFile(file,path){
   if(!file)return null;
-  const ext=(String(file.name||'').match(/\.[^.]+$/)||['.mp4'])[0].toLowerCase();
-  const safeExt=/\.(mp4|mov|webm)$/i.test(ext)?ext:'.mp4';
-  const uploadPath=path+safeExt;
-  const {error}=await db.storage.from('portfolio').upload(uploadPath,file,{upsert:true,cacheControl:'31536000',contentType:file.type||'video/mp4'});
+  const optimized=await compressVideo(file);
+  const uploadPath=path+'.webm';
+  const {error}=await db.storage.from('portfolio').upload(uploadPath,optimized,{upsert:true,cacheControl:'31536000',contentType:optimized.type||'video/webm'});
   if(error)throw new Error('동영상 업로드 실패: '+error.message);
   return db.storage.from('portfolio').getPublicUrl(uploadPath).data.publicUrl;
 }
