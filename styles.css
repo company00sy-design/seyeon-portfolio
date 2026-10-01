@@ -8,3 +8,8 @@
 .work-index-head{margin-top:70px!important;}
 @media(max-width:800px){.work-index-head{margin-top:32px!important;}}
 @media(max-width:560px){.work-index-head{margin-top:28px!important;}}
+
+
+/* Instagram embeds in portfolio detail */
+.instagram-embed-wrap{width:min(540px,100%);margin:0 auto;display:flex;justify-content:center;min-height:420px}.instagram-embed-wrap .instagram-media{width:100%!important;min-width:0!important;margin:0!important}.embed-wrap.embed-social{width:100%;background:#111;display:flex;justify-content:center;align-items:center;overflow:hidden}.embed-wrap.embed-social iframe{width:100%;min-height:520px;border:0}.embed-instagram{background:transparent}.project-external-link{align-self:flex-start}
+@media(max-width:800px){.instagram-embed-wrap{width:100%;min-height:400px}.embed-wrap.embed-social iframe{min-height:400px}}
